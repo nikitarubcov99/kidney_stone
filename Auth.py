@@ -13,6 +13,12 @@ from models.models import UserModel
 
 
 def loginByBD(login, password):
+    """
+    Метод для реализации авторизации.
+    :param login: Принимает на вход логин пользователя.
+    :param password: Принимает на вход пароль пользователя.
+    :return: Возвращает пользователя из БД или None если такого пользователя нет.
+    """
     try:
         player = UserModel.select().where(
             UserModel.user_login == login and UserModel.user_password == password).get()
@@ -20,11 +26,17 @@ def loginByBD(login, password):
     except Exception as error:
         return None
 
+
 class Window(QMainWindow, QTableWidget):
+    """
+    Класс окна авторизации
+    """
     def __init__(self):
+        """
+        Конструктор класса.
+        """
         super().__init__()
         uic.loadUi('ui/Login.ui', self)
-        # Инициализация основного окна программы и его компонентов
         self.pixmap = None
         self.showDialog = None
         self.file_name = None
@@ -33,7 +45,6 @@ class Window(QMainWindow, QTableWidget):
         self.show()
         self.pushButton.clicked.connect(self.login_event)
         self.pushButton_2.clicked.connect(self.exit_app)
-
 
     def openMainAdmin(self):
         """
@@ -51,9 +62,7 @@ class Window(QMainWindow, QTableWidget):
         """
         self.ui = ui_doctor(login=login)
 
-
     def login_event(self):
-        # Обработка логина
         login = self.lineEdit.text()
         if len(login) == 0:
             msg = QMessageBox()
@@ -63,7 +72,6 @@ class Window(QMainWindow, QTableWidget):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
-        # Обработка пароля
         password = self.lineEdit_2.text()
         if len(password) == 0:
             msg = QMessageBox()
@@ -85,6 +93,7 @@ class Window(QMainWindow, QTableWidget):
             self.openMainAdmin()
         elif user.superuser == False:
             self.openMainDoctor(login=login)
+
     @staticmethod
     def exit_app():
         """
@@ -94,11 +103,9 @@ class Window(QMainWindow, QTableWidget):
         QApplication.quit()
 
 
-# Объявления приложения PyQt
 App = QApplication(sys.argv)
 App.setStyleSheet("QLabel{font-size: 14pt;}")
 
-# Создание экземпляра главного окна программы
 window = Window()
 
 # Запуск приложения

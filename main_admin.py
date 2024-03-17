@@ -27,20 +27,31 @@ from tensorflow.keras.applications.vgg16 import preprocess_input
 
 
 def validate_snils_format(snils):
-    # Регулярное выражение для проверки формата СНИЛС (три группы по три цифры, дефисы между ними и пробел перед последними двумя цифрами)
+    """
+    Функция для валидации введенного пользователем СНИЛСА
+    :param snils: принимает СНИЛС в текстовом представлении
+    :return: возвращает True, если СНИЛС введен корректно, иначе False
+    """
     pattern = re.compile(r'^\d{3}-\d{3}-\d{3} \d{2}$')
 
-    # Сопоставление шаблона с введённым СНИЛС
     if pattern.match(snils):
-        return True  # СНИЛС соответствует формату
+        return True
     else:
         return False
+
+
 def load_and_preprocess_image(img_path):
-    img = image.load_img(img_path, target_size=(128, 128))  # Загружаем и изменяем размер изображения
-    x = image.img_to_array(img)  # Преобразуем изображение в массив numpy
-    x = np.expand_dims(x, axis=0)  # Добавляем дополнительное измерение, т.к. модель ожидает батч изображений
-    x = preprocess_input(x)  # Предварительная обработка, как для обучения модели (зависит от вашей модели)
+    """
+    Функция для загрузки и предобработки изображения, необходима для работы Layer-Wise Relevance Propagation
+    :param img_path:получает на вход путь к изображению
+    :return:возвращает предобработанное изображение
+    """
+    img = image.load_img(img_path, target_size=(128, 128))
+    x = image.img_to_array(img)
+    x = np.expand_dims(x, axis=0)
+    x = preprocess_input(x)
     return x
+
 
 def add_image_to_existing_pdf(pdf_path, image_path, image_path1, page_number):
     """
@@ -51,22 +62,21 @@ def add_image_to_existing_pdf(pdf_path, image_path, image_path1, page_number):
     :param page_number: номер страницы pdf файла на которую нужно вставить изображение
     :return:
     """
-    # Открываем существующий PDF-файл
     pdf_document = fitz.open(pdf_path)
-
-    # Открываем изображение
     pdf_document[page_number].insert_image(fitz.Rect(30, 255, 230, 455), stream=open(image_path, "rb").read())
     pdf_document[page_number].insert_image(fitz.Rect(330, 255, 530, 455), stream=open(image_path1, "rb").read())
-
     pdf_document.saveIncr()
-
-    # Закрываем документ
     pdf_document.close()
+
+
 def get_patient_info(patient_id):
+    """
+    Функция для получения информации о пациенте из БД по id пациента
+    :param patient_id: Принимает на вход id пациента
+    :return: Возвращает словарь, содержащий информацию о пациенте
+    """
     try:
-        # Получаем информацию о пациенте по ID
         patient = PatientModel.get_by_id(patient_id)
-        # Возвращаем словарь с информацией о пациенте
         return {
             "Фамилия": patient.patient_family,
             "Имя": patient.patient_name,
@@ -82,10 +92,13 @@ def get_patient_info(patient_id):
 
 
 def get_doctor_info(doctor_id):
+    """
+    Функция для получения информации о враче из БД по id врача
+    :param doctor_id: Принимает на вход id врача
+    :return: Возвращает словарь, содержащий информацию о враче
+    """
     try:
-        # Получаем информацию о враче по ID
         doctor = DoctorModel.get_by_id(doctor_id)
-        # Возвращаем словарь с информацией о враче
         return {
             "Фамилия": doctor.doctor_family,
             "Имя": doctor.doctor_name,
@@ -97,23 +110,39 @@ def get_doctor_info(doctor_id):
 
 
 class PatientDetailsWindow(QDialog):
+    """
+    Класс для создания окна подробной информации о карте пациента.
+    """
     def __init__(self, card_id, parent=None):
+        """
+        Конструктор класса.
+        :param card_id: Принимает id карты пациента для отображения.
+        :param parent: Принимает родительскую форму, для переотрисовки родительской при закрытии этой.
+        """
         super().__init__(parent)
         self.card_id = card_id
-        self.card = None  # Инициализируем card как None
+        self.card = None
         self.init_ui()
         self.fill_data()
         self.parent = parent
 
     def init_ui(self):
+        """
+        Метод инициализации и отрисовки окна карты.
+        :return: Ничего не возвращает.
+        """
         uic.loadUi('ui/Card.ui', self)
         self.pushButton.clicked.connect(self.generate_pdf)
         self.pushButton_3.clicked.connect(self.close)
 
     def closeEvent(self, event):
-        # При закрытии формы показываем родительское окно (вторую форму)
+        """
+        Метод для обработки события закрытия формы.
+        :param event: Принимает событие закрытия формы.
+        :return: Ничего не возвращает.
+        """
         if self.parent:
-            self.parent.reopen()  # Используйте метод reopen() для показа второй формы
+            self.parent.reopen()
         event.accept()
 
     def generate_pdf(self):
@@ -121,7 +150,6 @@ class PatientDetailsWindow(QDialog):
         Метод для создания pdf файла с отчетом
         :return: ничего не возвращает
         """
-        # инициализируем документ и шрифт
         pdf = FPDF()
         pdf.add_page()
         font_path = 'fonts/timesnrcyrmt.ttf'
@@ -130,9 +158,8 @@ class PatientDetailsWindow(QDialog):
         snils = self.label_16.text()
         snils_full_string = snils  # Ваша строка с СНИЛС
         snils_number = re.search(r'\d{3}-\d{3}-\d{3} \d{2}', snils_full_string)
-
         if snils_number:
-            snils_number = snils_number.group()  # '000-000 000 00' — номер СНИЛС без текста
+            snils_number = snils_number.group()
         else:
             snils_number = "Не найден"
         for patient in PatientModel.select().where(PatientModel.patient_snils == snils_number):
@@ -155,12 +182,8 @@ class PatientDetailsWindow(QDialog):
             doctor_family = doctor.doctor_family
             doctor_class = doctor.doctor_class
 
-        # Получаем текущую дату и время
         current_datetime = datetime.now()
-
-        # Преобразуем в строку в нужном формате
         current_date_str = current_datetime.strftime("%Y-%m-%d")
-        # описываем все строки которые будут добавлены в pdf отчет
         intro = '            Отчет об анализе на наличие лейкемии по пятну крови'.encode('utf-8')
         fio_intro = 'Данные пациента: '.encode('utf-8')
         patient_fio = f'Фамилия: {patient_family} Имя: {patient_name} Отчество: {patient_second_name} полных лет: {patient_age}'.encode(
@@ -201,7 +224,7 @@ class PatientDetailsWindow(QDialog):
         pdf_path = f"reports/{patient_family} {patient_name[0]}. {patient_second_name[0]}.  {current_date_str}.pdf"
         pdf.output(pdf_path)
         # добавляем исходное изображение и изображение с тепловой картой аномалий в pdf файл отчета
-        start_image_blob = start_image  # Или как у вас названо поле с изображением
+        start_image_blob = start_image
         anomaly_image_blob = anomaly_image
         with open('start_image.png', 'wb') as f:
             f.write(start_image_blob)
@@ -214,7 +237,12 @@ class PatientDetailsWindow(QDialog):
         add_image_to_existing_pdf(existing_pdf_path, image_path, image_path1, target_page_number)
         os.remove(image_path1)
         os.remove(image_path)
+
     def fill_data(self):
+        """
+        Метод для заполнения формы карточки пациента.
+        :return: Ничего не возвращает.
+        """
         self.card = PatientsCardsModel.get_by_id(self.card_id)
         patient_dict = get_patient_info(self.card.patient_card_patient_id)
         doctor_dict = get_doctor_info(self.card.patient_card_doctor_id)
@@ -264,7 +292,7 @@ class ui_admin(QMainWindow):
 
     def __init__(self, parent=None):
         """
-        Консструктор класса
+        Конструктор класса.
         """
         super().__init__(parent)
         self.setupUi()
@@ -287,21 +315,31 @@ class ui_admin(QMainWindow):
         self.show()
 
     def reopen(self):
+        """
+        Метод необходим для реализации переоткрытия окон при закрытии последующих.
+        :return: Ничего не возвращает.
+        """
         self.show_list()
         self.show()
 
     def closeEvent(self, event):
-        # При закрытии окна показываем родительское окно
+        """
+        Обработка события закрытия формы.
+        :param event: Принимает событие закрытия формы.
+        :return: Ничего не возвращает.
+        """
         if self.parent:
             self.parent.show()
         super().closeEvent(event)
 
     def show_list(self):
+        """
+        Метод для отображения списка карт на форме.
+        :return: Ничего не возвращает.
+        """
         patient_cards = PatientsCardsModel.select()
         self.tableWidget.setRowCount(patient_cards.count())
         for row, card in enumerate(patient_cards):
-            # Здесь предполагается, что у вас есть соответствующие поля в модели PatientsCardsModel
-            # Вам нужно будет адаптировать это к вашей конкретной модели и её полям
             patient = card.patient_card_patient_id
             fio = f"{patient.patient_family} {patient.patient_name[0]}.{patient.patient_second_name[0]}."
             self.tableWidget.setItem(row, 0, QTableWidgetItem(fio))
@@ -313,30 +351,53 @@ class ui_admin(QMainWindow):
             self.tableWidget.setCellWidget(row, 3, btn_view)
 
     def view_card_details(self, card):
-        # Эта функция будет вызвана при нажатии на кнопку "Просмотр"
+        """
+        Метод для взаимодействия с кнопкой просмотра в таблице карт.
+        :param card: Получает на вход карту которую нужно отобразить.
+        :return: Ничего не возвращает.
+        """
         self.details_window = PatientDetailsWindow(card, self)
         self.details_window.fill_data()
         self.details_window.show()
         self.hide()
 
     def openAddDoctorForm(self):
+        """
+        Метод для открытия формы добавления врача.
+        :return: Ничего не возвращает.
+        """
         self.addDoctorForm = AddDoctorForm(self)
         self.addDoctorForm.show()
         self.hide()
 
     def openAddPatientForm(self):
+        """
+        Метод для открытия формы добавления пациента.
+        :return: Ничего не возвращает.
+        """
         self.addPatientForm = AddPatientForm(self)
         self.addPatientForm.show()
         self.hide()
 
     def openAddVisitForm(self):
+        """
+        Метод для открытия формы добавления посещения.
+        :return: Ничего не возвращает.
+        """
         self.addVisitForm = AddVisitForm(self)
         self.addVisitForm.show()
         self.hide()
 
 
 class AddDoctorForm(QMainWindow):
+    """
+    Класс для реализации работы формы добавления врача.
+    """
     def __init__(self, parent=None):
+        """
+        Конструктор класса.
+        :param parent: Принимает родительскую форму, для переотрисовки родительской при закрытии этой.
+        """
         super(AddDoctorForm, self).__init__(parent)
         self.parent = parent
         self.should_close = False
@@ -344,11 +405,13 @@ class AddDoctorForm(QMainWindow):
         categories = ["Без категории", "Вторая", "Первая", "Высшая"]
         self.comboBox.addItems(categories)
         self.pushButton.clicked.connect(self.add_doctor)
-        # self.should_close = True
         self.pushButton_2.clicked.connect(self.close)
 
     def add_doctor(self):
-        # Считываем данные из формы
+        """
+        Метод для добавления врача в БД.
+        :return: Ничего не возвращает.
+        """
         family = self.lineEdit_3.text()
         if len(family) == 0:
             msg = QMessageBox()
@@ -395,12 +458,10 @@ class AddDoctorForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
-        # Создаем новую запись в базе данных
 
         doctor = DoctorModel.select().where(DoctorModel.doctor_name == name and DoctorModel.doctor_family == family
                                             and DoctorModel.doctor_second_name == second_name).get_or_none()
         if doctor is not None:
-            # Если находим, сообщаем, что такой врач уже существует
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Information)
             msg.setText("Информация")
@@ -419,7 +480,6 @@ class AddDoctorForm(QMainWindow):
         doctor.save()
 
         user = UserModel.select().where(UserModel.user_login == login).get_or_none()
-        # Если находим, сообщаем, что такой врач уже существует
         if user is not None:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Information)
@@ -436,17 +496,29 @@ class AddDoctorForm(QMainWindow):
                              )
 
     def closeEvent(self, event):
+        """
+        Метод для реализации возможности переоткрытия формы.
+        :param event: Принимает на вход событие закрытия формы.
+        :return: Ничего не возвращает.
+        """
         if self.should_close:
             if self.parent:
-                self.parent.reopen()  # Используйте метод reopen() для показа второй формы
-            event.accept()  # Закрываем окно, если should_close == True
+                self.parent.reopen()
+            event.accept()
         else:
-            event.ignore()  # Игнорируем событие закрытия, если should_close == False
+            event.ignore()
             self.should_close = True
 
 
 class AddPatientForm(QMainWindow):
+    """
+    Класс для добавления пациента в БД.
+    """
     def __init__(self, parent=None):
+        """
+        Конструктор класса.
+        :param parent: Принимает родительскую форму, для переотрисовки родительской при закрытии этой.
+        """
         super(AddPatientForm, self).__init__(parent)
         self.parent = parent
         self.should_close = False
@@ -465,17 +537,25 @@ class AddPatientForm(QMainWindow):
         self.pushButton_2.clicked.connect(self.close)
 
     def closeEvent(self, event):
+        """
+        Метод для реализации возможности переоткрытия формы.
+        :param event: Принимает на вход событие закрытия формы.
+        :return: Ничего не возвращает.
+        """
         if self.should_close:
             if self.parent:
-                self.parent.reopen()  # Используйте метод reopen() для показа второй формы
-            event.accept()  # Закрываем окно, если should_close == True
+                self.parent.reopen()
+            event.accept()
         else:
-            event.ignore()  # Игнорируем событие закрытия, если should_close == False
+            event.ignore()
             self.should_close = True
 
     def add_patient(self):
-        # Считываем данные из формы
-        family = self.lineEdit_3.text()  # Предполагается, что это QLineEdit для фамилии
+        """
+        Метод для добавления пациента в БД.
+        :return: Ничего не возвращает.
+        """
+        family = self.lineEdit_3.text()
         if len(family) == 0:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
@@ -484,7 +564,7 @@ class AddPatientForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
-        name = self.lineEdit.text()  # QLineEdit для имени
+        name = self.lineEdit.text()
         if len(name) == 0:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
@@ -493,7 +573,7 @@ class AddPatientForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
-        second_name = self.lineEdit_2.text()  # QLineEdit для отчества
+        second_name = self.lineEdit_2.text()
         if len(second_name) == 0:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
@@ -502,7 +582,7 @@ class AddPatientForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
-        age = self.lineEdit_5.text()  # QLineEdit для отчества
+        age = self.lineEdit_5.text()
         if len(age) == 0:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
@@ -511,8 +591,8 @@ class AddPatientForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
-        birth_date = self.dateEdit.date().toPyDate()  # Преобразуем QDate в Python datetime.date
-        birth_date_qdate  = self.dateEdit.date()
+        birth_date = self.dateEdit.date().toPyDate()
+        birth_date_qdate = self.dateEdit.date()
         birth_date_str = birth_date_qdate.toString("yyyy.MM.dd")
         if len(birth_date_str) == 0:
             msg = QMessageBox()
@@ -550,7 +630,6 @@ class AddPatientForm(QMainWindow):
             return
         try:
             patient = PatientModel.get(PatientModel.patient_snils == snils)
-            # Если находим, сообщаем, что такой пациент уже существует
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Information)
             msg.setText("Информация")
@@ -571,8 +650,16 @@ class AddPatientForm(QMainWindow):
 
 
 class AddVisitForm(QMainWindow):
+    """
+    Класс для добавления посещения в БД
+    """
     def __init__(self, parent=None):
+        """
+        Конструктор класса.
+        :param parent: Принимает родительскую форму, для переотрисовки родительской при закрытии этой.
+        """
         super(AddVisitForm, self).__init__(parent)
+        self.pixmap = None
         self.parent = parent
         uic.loadUi('ui/add_visit.ui', self)
         doctors = DoctorModel.select()
@@ -591,9 +678,13 @@ class AddVisitForm(QMainWindow):
         self.pushButton_4.clicked.connect(self.close)
 
     def closeEvent(self, event):
-        # При закрытии формы показываем родительское окно (вторую форму)
+        """
+        Метод для реализации возможности переоткрытия формы.
+        :param event: Принимает на вход событие закрытия формы.
+        :return: Ничего не возвращает.
+        """
         if self.parent:
-            self.parent.reopen()  # Используйте метод reopen() для показа второй формы
+            self.parent.reopen()
         event.accept()
 
     def save_to_card(self):
@@ -619,7 +710,7 @@ class AddVisitForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
-        selected_doctor_id = self.comboBox.currentIndex()  # Получить выбранный ID врача
+        selected_doctor_id = self.comboBox.currentIndex()
         if selected_doctor_id == 0:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
@@ -628,7 +719,7 @@ class AddVisitForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
-        selected_patient_id = self.comboBox_2.currentIndex()  # Получить выбранный ID пациента
+        selected_patient_id = self.comboBox_2.currentIndex()
         if selected_doctor_id == 0:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
@@ -669,12 +760,10 @@ class AddVisitForm(QMainWindow):
         fin.close()
 
         try:
-            # Попытка найти существующую карту пациента
             card = PatientsCardsModel.get(
                 PatientsCardsModel.patient_card_patient_id == selected_patient_id,
                 PatientsCardsModel.patient_card_doctor_id == selected_doctor_id
             )
-            # Если карта найдена, обновляем её данные
             card.card_creation_date = date_str
             card.diagnose = diagnose_text
             card.mkb_diagnose = mkb
@@ -683,7 +772,6 @@ class AddVisitForm(QMainWindow):
             card.save()
             print("Существующая карта обновлена.")
         except DoesNotExist:
-            # Если карта не найдена, создаём новую
             new_card = PatientsCardsModel.create(
                 patient_card_patient_id=selected_patient_id,
                 patient_card_doctor_id=selected_doctor_id,
@@ -695,10 +783,9 @@ class AddVisitForm(QMainWindow):
             )
             print("Новая карта успешно добавлена в базу данных.")
         os.remove(anomaly_file_name)
-        # Обновление данных пациента (если необходимо)
         try:
             patient = PatientModel.get_by_id(selected_patient_id)
-            patient.patient_analyses_count += 1  # Например, обновляем количество анализов
+            patient.patient_analyses_count += 1
             patient.patient_has_kidney_stone = diagnose_bool
             patient.save()
         except DoesNotExist:
@@ -707,36 +794,32 @@ class AddVisitForm(QMainWindow):
     def get_file_path(self):
         """
         Метод для получения пути к выбранному для анализа файлу.
-        :return: ничего не возвращает
+        :return: Ничего не возвращает.
         """
         self.label_7.clear()
         self.label_5.clear()
         file_name = QFileDialog.getOpenFileName(self, 'Open file',
                                                 '"C:/Users/nero1"')[0]
-        # Вызов метода для вывода изображения\
         self.label_8.setText(file_name)
         self.print_image()
 
     def print_image(self):
         """
         Метод для отображения выбранного пользователем изображения.
-        :return: ничего не возвращает
+        :return: Ничего не возвращает.
         """
         file_name = self.label_8.text()
         self.pixmap = QPixmap(file_name)
         self.pixmap = self.pixmap.scaled(201, 221)
-
-        # Добавление изображения в поле
         self.label_5.setPixmap(self.pixmap)
 
     def result_implementation(self, predict_classes):
         """
         Метод для имплементации результатов работы нейронной сети
         :param predict_classes: хранит класс предсказанный нейронной сетью
-        :param classes: список, хранит возможный набор классов [здоров, лейкемия]
         :return:
         """
-        if ((predict_classes > 0.75) * 1):
+        if (predict_classes > 0.75) * 1:
             self.label_7.setText(f'Состояние почек в норме')
         else:
             self.label_7.setText(f'У пациента мочекаменная болезнь')
@@ -751,17 +834,11 @@ class AddVisitForm(QMainWindow):
         """
         file_name = self.label_8.text()
         global saved_model, normal_data, img
-        classes = ['мочекамення болезнь', 'здоров']
         model_k = 0
         img_size = 128
-
-        # Проверка загружена ли модель в память
         if model_k == 0:
             saved_model = tf.keras.models.load_model("kidney_stones_model.h5")
             model_k += 1
-
-        # Пред обработка выбранного пользователем изображения для классификации, если файла не существует по пути,
-        # вызывается исключение
         try:
             img = cv2.imread(file_name)
             img = cv2.resize(img, (img_size, img_size))
@@ -770,28 +847,20 @@ class AddVisitForm(QMainWindow):
             print(e)
         pred = saved_model.predict(img)
         self.result_implementation(pred)
-
         tf.compat.v1.disable_eager_execution()
         saved_model = tf.keras.models.load_model("kidney_stones_model.h5")
         model_wo_softmax = keras.models.Model(inputs=saved_model.inputs,
                                               outputs=saved_model.layers[-2].output)
         analyzer = innvestigate.create_analyzer("integrated_gradients", model_wo_softmax)
-
         X = load_and_preprocess_image(file_name)
         relevances = analyzer.analyze(X)
-        relevance = relevances[0]  # Берем релевантность для первого (и единственного) образца
-        relevance = np.squeeze(relevance)  # Убираем лишние измерения
-
+        relevance = relevances[0]
+        relevance = np.squeeze(relevance)
         plt.ioff()
-
-        # Создаем изображение, как обычно, с использованием цветовой карты
         plt.imshow(relevance, cmap='magma')
-        # Сохраняем изображение в файл, не отображая его
         plt.savefig("cam.jpg")
-        plt.close()  # Закрываем фигуру
+        plt.close()
         file_name = "cam.jpg"
         self.pixmap = QPixmap(file_name)
         self.pixmap = self.pixmap.scaled(201, 221)
-
-        # Добавление изображения в поле
         self.label_6.setPixmap(self.pixmap)
