@@ -44,13 +44,12 @@ class Window(QMainWindow, QTableWidget):
         self.ui.setupUi()
         self.hide()
 
-    def openMainDoctor(self):
+    def openMainDoctor(self, login):
         """
         Метод для инициализации окна программы для создания отчета
         :return: ничего не возвращает
         """
-        self.ui = ui_doctor()
-        self.ui.setupUi()
+        self.ui = ui_doctor(login=login)
 
 
     def login_event(self):
@@ -85,7 +84,7 @@ class Window(QMainWindow, QTableWidget):
         elif user.superuser == True:
             self.openMainAdmin()
         elif user.superuser == False:
-            self.openMainDoctor()
+            self.openMainDoctor(login=login)
     @staticmethod
     def exit_app():
         """

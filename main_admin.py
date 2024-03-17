@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidget, QFileDialog
     QPushButton, QProgressBar, QLineEdit, QTextEdit, QMessageBox, QDialog, QWidget, QVBoxLayout, QTableWidgetItem
 import cv2
 import keras
-from datetime import datetime
+from datetime import datetime, date
 import matplotlib
 import numpy as np
 from fpdf import FPDF
@@ -26,6 +26,15 @@ from tensorflow.keras.preprocessing import image
 from tensorflow.keras.applications.vgg16 import preprocess_input
 
 
+def validate_snils_format(snils):
+    # Регулярное выражение для проверки формата СНИЛС (три группы по три цифры, дефисы между ними и пробел перед последними двумя цифрами)
+    pattern = re.compile(r'^\d{3}-\d{3}-\d{3} \d{2}$')
+
+    # Сопоставление шаблона с введённым СНИЛС
+    if pattern.match(snils):
+        return True  # СНИЛС соответствует формату
+    else:
+        return False
 def load_and_preprocess_image(img_path):
     img = image.load_img(img_path, target_size=(128, 128))  # Загружаем и изменяем размер изображения
     x = image.img_to_array(img)  # Преобразуем изображение в массив numpy
@@ -118,23 +127,56 @@ class PatientDetailsWindow(QDialog):
         font_path = 'fonts/timesnrcyrmt.ttf'
         pdf.add_font("Times", "", font_path, uni=True)
         pdf.set_font("Times", size=14)
+        snils = self.label_16.text()
+        snils_full_string = snils  # Ваша строка с СНИЛС
+        snils_number = re.search(r'\d{3}-\d{3}-\d{3} \d{2}', snils_full_string)
+
+        if snils_number:
+            snils_number = snils_number.group()  # '000-000 000 00' — номер СНИЛС без текста
+        else:
+            snils_number = "Не найден"
+        for patient in PatientModel.select().where(PatientModel.patient_snils == snils_number):
+            patient_id = patient.patient_id
+            patient_name = patient.patient_name
+            patient_second_name = patient.patient_second_name
+            patient_family = patient.patient_family
+            patient_age = patient.patient_age
+            patient_count = patient.patient_analyses_count
+        for card in PatientsCardsModel.select().where(PatientsCardsModel.patient_card_patient_id == patient_id):
+            doctor_id = card.patient_card_doctor_id
+            diagnose = card.diagnose
+            mkb_diagnose = card.mkb_diagnose
+            card_creation_date = card.card_creation_date
+            start_image = card.start_image
+            anomaly_image = card.anomaly_image
+        for doctor in DoctorModel.select().where(DoctorModel.doctor_id == doctor_id):
+            doctor_name = doctor.doctor_name
+            doctor_second_name = doctor.doctor_second_name
+            doctor_family = doctor.doctor_family
+            doctor_class = doctor.doctor_class
+
+        # Получаем текущую дату и время
+        current_datetime = datetime.now()
+
+        # Преобразуем в строку в нужном формате
+        current_date_str = current_datetime.strftime("%Y-%m-%d")
         # описываем все строки которые будут добавлены в pdf отчет
         intro = '            Отчет об анализе на наличие лейкемии по пятну крови'.encode('utf-8')
         fio_intro = 'Данные пациента: '.encode('utf-8')
-        patient_fio = f'Фамилия: {self.label.text()} Имя: {self.label_2.text()} Отчество: {self.label_3.text()} полных лет: {self.patient_age}'.encode(
+        patient_fio = f'Фамилия: {patient_family} Имя: {patient_name} Отчество: {patient_second_name} полных лет: {patient_age}'.encode(
             'utf-8')
-        patient = f'СНИЛС: {self.patient_snils}     диагноз по МКБ-10: {self.mkb_diagnose}     кол-во анализов {self.patient_count}'.encode(
+        patient = f'СНИЛС: {snils_number}     диагноз по МКБ-10: {mkb_diagnose}     кол-во анализов {patient_count}'.encode(
             'utf-8')
         doctor_intro = 'Информация о лечащем враче: '.encode('utf-8')
-        doctor_fio = f'Фамилия: {self.doctor_name} Имя: {self.doctor_second_name} Отчество: {self.doctor_family}'.encode(
+        doctor_fio = f'Фамилия: {doctor_family} Имя: {doctor_name} Отчество: {doctor_second_name}'.encode(
             'utf-8')
-        doctor_cat = f'Категория лечащего врача: {self.doctor_class}'.encode('utf-8')
+        doctor_cat = f'Категория лечащего врача: {doctor_class}'.encode('utf-8')
         image_intro_norm = 'Изначальное изображение                          Изображение с аномалиями'.encode('utf-8')
-        if self.diagnose == 'лейкимия':
-            analys_result = '                            При анализе обнаружена лейкемия'.encode('utf-8')
+        if 'мочекаменная' in diagnose:
+            analys_result = '              При анализе обнаружена мочекаменная болезнь'.encode('utf-8')
         else:
             analys_result = '                              Заболеваний не обнаружено'.encode('utf-8')
-        open_date = f'Дата создания карточки {self.output_date_str}                       Дата осмотра {self.current_date_str}'.encode(
+        open_date = f'Дата создания карточки {card_creation_date}                       Дата осмотра {current_date_str}'.encode(
             'utf-8')
         # добавляем полученные строки в pdf файл отчета
         pdf.set_font("Times", size=18)
@@ -156,17 +198,17 @@ class PatientDetailsWindow(QDialog):
         pdf.multi_cell(400, 10, str(analys_result.decode('utf-8')))
         pdf.set_font("Times", size=14)
         pdf.multi_cell(400, 10, str(open_date.decode('utf-8')))
-        pdf_path = f"reports/{self.patient_name} {self.patient_second_name[0]}. {self.patient_family[0]}.  {self.current_date_str}.pdf"
+        pdf_path = f"reports/{patient_family} {patient_name[0]}. {patient_second_name[0]}.  {current_date_str}.pdf"
         pdf.output(pdf_path)
         # добавляем исходное изображение и изображение с тепловой картой аномалий в pdf файл отчета
-        with open("image_from_db.jpeg", "wb") as file:
-            file.write(self.start_image)
-            file.close()
-        with open("image_from_db1.jpeg", "wb") as file:
-            file.write(self.anomaly_image)
-            file.close()
-        image_path = "C:/Users/nero1/PycharmProjects/pythonProject7/image_from_db.jpeg"
-        image_path1 = "C:/Users/nero1/PycharmProjects/pythonProject7/image_from_db1.jpeg"
+        start_image_blob = start_image  # Или как у вас названо поле с изображением
+        anomaly_image_blob = anomaly_image
+        with open('start_image.png', 'wb') as f:
+            f.write(start_image_blob)
+        with open('anomaly_image.png', 'wb') as f:
+            f.write(anomaly_image_blob)
+        image_path = "C:/Users/nero1/PycharmProjects/pythonProject3/start_image.png"
+        image_path1 = "C:/Users/nero1/PycharmProjects/pythonProject3/anomaly_image.png"
         existing_pdf_path = pdf_path
         target_page_number = 0
         add_image_to_existing_pdf(existing_pdf_path, image_path, image_path1, target_page_number)
@@ -486,6 +528,14 @@ class AddPatientForm(QMainWindow):
             msg.setIcon(QMessageBox.Critical)
             msg.setText("Ошибка")
             msg.setInformativeText('Заполните поле СНИЛС')
+            msg.setWindowTitle("Error")
+            msg.exec_()
+            return
+        if not validate_snils_format(snils):
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("Ошибка")
+            msg.setInformativeText('Заполните СНИЛС корректно')
             msg.setWindowTitle("Error")
             msg.exec_()
             return

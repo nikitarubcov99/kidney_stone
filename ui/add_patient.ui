@@ -159,6 +159,9 @@
       <height>20</height>
      </rect>
     </property>
+    <property name="inputMask">
+     <string>000-000-000 00</string>
+    </property>
    </widget>
    <widget class="QLabel" name="label_7">
     <property name="geometry">
