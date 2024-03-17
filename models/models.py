@@ -10,22 +10,6 @@ class BaseModel(Model):
         database = pg_db
 
 
-class PatientModel(BaseModel):
-    patient_id = IdentityField()
-    patient_name = CharField(null=False, max_length=32)
-    patient_second_name = CharField(null=False, max_length=32)
-    patient_family = CharField(null=False, max_length=32)
-    patient_age = IntegerField(null=False, default=0)
-    patient_birth_date = DateField(null=False, default=datetime.now())
-    patient_snils = CharField(null=False, unique=True, max_length=15)
-    patient_has_kidney_stone = BooleanField(null=False, default=False)
-    patient_analyses_count = IntegerField(null=False, default=0)
-
-    class Meta:
-        db_table = "patients"
-        order_by = ('patient_id',)
-
-
 class DoctorModel(BaseModel):
     doctor_id = IdentityField()
     doctor_name = CharField(null=False, max_length=32)
@@ -36,6 +20,23 @@ class DoctorModel(BaseModel):
     class Meta:
         db_table = "doctors"
         order_by = ('doctor_id',)
+
+
+class PatientModel(BaseModel):
+    patient_id = IdentityField()
+    patient_name = CharField(null=False, max_length=32)
+    patient_second_name = CharField(null=False, max_length=32)
+    patient_family = CharField(null=False, max_length=32)
+    patient_age = IntegerField(null=False, default=0)
+    patient_birth_date = DateField(null=False, default=datetime.now())
+    patient_snils = CharField(null=False, unique=True, max_length=15)
+    patient_has_kidney_stone = BooleanField(null=False, default=False)
+    patient_analyses_count = IntegerField(null=False, default=0)
+    responsible_doctor = ForeignKeyField(DoctorModel, backref='patients', on_delete='CASCADE')
+
+    class Meta:
+        db_table = "patients"
+        order_by = ('patient_id',)
 
 
 class PatientsCardsModel(BaseModel):
@@ -68,17 +69,13 @@ class UserModel(BaseModel):
         order_by = ('user_id',)
 
 
-
-
-# PatientModel.create_table()
 # DoctorModel.create_table()
+# PatientModel.create_table()
 # PatientsCardsModel.create_table()
 # UserModel.create_table()
-#     doctor_id = IdentityField()
-#     doctor_name = CharField(null=False, max_length=32)
-#     doctor_second_name = CharField(null=False, max_length=32)
-#     doctor_family = CharField(null=False, max_length=32)
-#     doctor_class = CharField(null=False, default='вторая категория')
-# DoctorModel.create(doctor_name='Иванов', doctor_second_name='Иван', doctor_family='Иванович', doctor_class='высшая категория')
+
+# DoctorModel.create(doctor_name='Иван', doctor_second_name='Иванович', doctor_family='Иванов', doctor_class='высшая категория')
 # UserModel.create(user_login='admin', user_password='admin', superuser=True)
-UserModel.create(user_login='admin', user_password='admin', superuser=True)
+# UserModel.create(user_login='doctor', user_password='doctor', superuser=False, doctor=1)
+# PatientModel.create(patient_name = 'Петр', patient_second_name='Петрович', patient_family='Петров', patient_age=21, patient_birth_date=datetime(2003, 1, 1), patient_snils="123-456-789 00",
+#                     patient_has_kidney_stone=False, patient_analyses_count=0, responsible_doctor = 1)
