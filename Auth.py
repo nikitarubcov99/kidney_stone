@@ -86,7 +86,7 @@ class Window(QMainWindow, QTableWidget):
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
             msg.setText("Ошибка")
-            msg.setInformativeText('Нет такого пользователя')
+            msg.setInformativeText('Неверный логин или пароль')
             msg.setWindowTitle("Error")
             msg.exec_()
         elif user.superuser == True:

@@ -63,8 +63,8 @@ def add_image_to_existing_pdf(pdf_path, image_path, image_path1, page_number):
     :return:
     """
     pdf_document = fitz.open(pdf_path)
-    pdf_document[page_number].insert_image(fitz.Rect(30, 255, 230, 455), stream=open(image_path, "rb").read())
-    pdf_document[page_number].insert_image(fitz.Rect(330, 255, 530, 455), stream=open(image_path1, "rb").read())
+    pdf_document[page_number].insert_image(fitz.Rect(30, 285, 230, 485), stream=open(image_path, "rb").read())
+    pdf_document[page_number].insert_image(fitz.Rect(330, 285, 530, 485), stream=open(image_path1, "rb").read())
     pdf_document.saveIncr()
     pdf_document.close()
 
@@ -186,12 +186,12 @@ class PatientDetailsWindow(QDialog):
         current_date_str = current_datetime.strftime("%Y-%m-%d")
         intro = '            Отчет об анализе на наличие лейкемии по пятну крови'.encode('utf-8')
         fio_intro = 'Данные пациента: '.encode('utf-8')
-        patient_fio = f'Фамилия: {patient_family} Имя: {patient_name} Отчество: {patient_second_name} полных лет: {patient_age}'.encode(
+        patient_fio = f'Фамилия: {patient_family}   Имя: {patient_name}   Отчество: {patient_second_name}      полных лет: {patient_age}'.encode(
             'utf-8')
         patient = f'СНИЛС: {snils_number}     диагноз по МКБ-10: {mkb_diagnose}     кол-во анализов {patient_count}'.encode(
             'utf-8')
         doctor_intro = 'Информация о лечащем враче: '.encode('utf-8')
-        doctor_fio = f'Фамилия: {doctor_family} Имя: {doctor_name} Отчество: {doctor_second_name}'.encode(
+        doctor_fio = f'Фамилия: {doctor_family}   Имя: {doctor_name}   Отчество: {doctor_second_name}'.encode(
             'utf-8')
         doctor_cat = f'Категория лечащего врача: {doctor_class}'.encode('utf-8')
         image_intro_norm = 'Изначальное изображение                          Изображение с аномалиями'.encode('utf-8')
@@ -201,7 +201,6 @@ class PatientDetailsWindow(QDialog):
             analys_result = '                              Заболеваний не обнаружено'.encode('utf-8')
         open_date = f'Дата создания карточки {card_creation_date}                       Дата осмотра {current_date_str}'.encode(
             'utf-8')
-        # добавляем полученные строки в pdf файл отчета
         pdf.set_font("Times", size=18)
         pdf.multi_cell(200, 10, str(intro.decode('utf-8')), align='С')
         pdf.set_font("Times", size=16)
@@ -214,6 +213,7 @@ class PatientDetailsWindow(QDialog):
         pdf.set_font("Times", size=14)
         pdf.multi_cell(400, 10, str(doctor_fio.decode('utf-8')))
         pdf.multi_cell(400, 10, str(doctor_cat.decode('utf-8')))
+        pdf.ln(10)
         pdf.set_font("Times", size=16)
         pdf.multi_cell(400, 10, str(image_intro_norm.decode('utf-8')))
         pdf.set_font("Times", size=18)
@@ -223,15 +223,14 @@ class PatientDetailsWindow(QDialog):
         pdf.multi_cell(400, 10, str(open_date.decode('utf-8')))
         pdf_path = f"reports/{patient_family} {patient_name[0]}. {patient_second_name[0]}.  {current_date_str}.pdf"
         pdf.output(pdf_path)
-        # добавляем исходное изображение и изображение с тепловой картой аномалий в pdf файл отчета
         start_image_blob = start_image
         anomaly_image_blob = anomaly_image
         with open('start_image.png', 'wb') as f:
             f.write(start_image_blob)
         with open('anomaly_image.png', 'wb') as f:
             f.write(anomaly_image_blob)
-        image_path = "C:/Users/nero1/PycharmProjects/pythonProject3/start_image.png"
-        image_path1 = "C:/Users/nero1/PycharmProjects/pythonProject3/anomaly_image.png"
+        image_path = "C:/Users/dmitr/PycharmProjects/kidney_stone/start_image.png"
+        image_path1 = "C:/Users/dmitr/PycharmProjects/kidney_stone/anomaly_image.png"
         existing_pdf_path = pdf_path
         target_page_number = 0
         add_image_to_existing_pdf(existing_pdf_path, image_path, image_path1, target_page_number)
@@ -269,7 +268,7 @@ class PatientDetailsWindow(QDialog):
             with open("image_from_db.jpg", "wb") as file:
                 file.write(self.card.start_image)
                 file.close()
-            file_name = "C:/Users/nero1/PycharmProjects/pythonProject3/image_from_db.jpg"
+            file_name = "C:/Users/dmitr/PycharmProjects/kidney_stone/image_from_db.jpg"
             self.pixmap = QPixmap(file_name)
             self.pixmap = self.pixmap.scaled(241, 221)
             self.label_10.setPixmap(self.pixmap)
@@ -278,7 +277,7 @@ class PatientDetailsWindow(QDialog):
             with open("image_from_db1.jpg", "wb") as file:
                 file.write(self.card.anomaly_image)
                 file.close()
-            file_name = "C:/Users/nero1/PycharmProjects/pythonProject3/image_from_db1.jpg"
+            file_name = "C:/Users/dmitr/PycharmProjects/kidney_stone/image_from_db1.jpg"
             self.pixmap = QPixmap(file_name)
             self.pixmap = self.pixmap.scaled(241, 221)
             self.label_11.setPixmap(self.pixmap)
@@ -421,6 +420,7 @@ class AddDoctorForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
+        self.should_close = False
         name = self.lineEdit.text()
         if len(name) == 0:
             msg = QMessageBox()
@@ -430,6 +430,7 @@ class AddDoctorForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
+        self.should_close = False
         second_name = self.lineEdit_2.text()
         if len(second_name) == 0:
             msg = QMessageBox()
@@ -439,6 +440,7 @@ class AddDoctorForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
+        self.should_close = False
         category = self.comboBox.currentText()
         login = self.lineEdit_4.text()
         if len(login) == 0:
@@ -449,6 +451,7 @@ class AddDoctorForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
+        self.should_close = False
         password = self.lineEdit_5.text()
         if len(password) == 0:
             msg = QMessageBox()
@@ -458,6 +461,7 @@ class AddDoctorForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
+        self.should_close = False
 
         doctor = DoctorModel.select().where(DoctorModel.doctor_name == name and DoctorModel.doctor_family == family
                                             and DoctorModel.doctor_second_name == second_name).get_or_none()
@@ -478,6 +482,8 @@ class AddDoctorForm(QMainWindow):
             )
 
         doctor.save()
+        doctor = DoctorModel.select().where(DoctorModel.doctor_name == name and DoctorModel.doctor_family == family
+                                            and DoctorModel.doctor_second_name == second_name).get_or_none()
 
         user = UserModel.select().where(UserModel.user_login == login).get_or_none()
         if user is not None:
@@ -492,7 +498,7 @@ class AddDoctorForm(QMainWindow):
             UserModel.create(user_login=login,
                              user_password=password,
                              superuser=False,
-                             doctor=doctor.id
+                             doctor=doctor.doctor_id
                              )
 
     def closeEvent(self, event):
@@ -564,6 +570,7 @@ class AddPatientForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
+        self.should_close = False
         name = self.lineEdit.text()
         if len(name) == 0:
             msg = QMessageBox()
@@ -573,6 +580,7 @@ class AddPatientForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
+        self.should_close = False
         second_name = self.lineEdit_2.text()
         if len(second_name) == 0:
             msg = QMessageBox()
@@ -582,6 +590,7 @@ class AddPatientForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
+        self.should_close = False
         age = self.lineEdit_5.text()
         if len(age) == 0:
             msg = QMessageBox()
@@ -591,6 +600,7 @@ class AddPatientForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
+        self.should_close = False
         birth_date = self.dateEdit.date().toPyDate()
         birth_date_qdate = self.dateEdit.date()
         birth_date_str = birth_date_qdate.toString("yyyy.MM.dd")
@@ -602,6 +612,7 @@ class AddPatientForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
+        self.should_close = False
         snils = self.lineEdit_6.text()
         if len(snils) == 0:
             msg = QMessageBox()
@@ -611,6 +622,7 @@ class AddPatientForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
+        self.should_close = False
         if not validate_snils_format(snils):
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
@@ -619,6 +631,7 @@ class AddPatientForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
+        self.should_close = False
         selected_doctor_id = self.comboBox.currentIndex()
         if selected_doctor_id == 0:
             msg = QMessageBox()
@@ -628,6 +641,7 @@ class AddPatientForm(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
             return
+        self.should_close = False
         try:
             patient = PatientModel.get(PatientModel.patient_snils == snils)
             msg = QMessageBox()
@@ -799,7 +813,7 @@ class AddVisitForm(QMainWindow):
         self.label_7.clear()
         self.label_5.clear()
         file_name = QFileDialog.getOpenFileName(self, 'Open file',
-                                                '"C:/Users/nero1"')[0]
+                                                '"C:/Users/dmitr"')[0]
         self.label_8.setText(file_name)
         self.print_image()
 

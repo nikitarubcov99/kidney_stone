@@ -6,25 +6,25 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>785</width>
+    <width>1200</width>
     <height>802</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+   <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
   <property name="minimumSize">
    <size>
-    <width>785</width>
+    <width>1200</width>
     <height>802</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>785</width>
+    <width>1200</width>
     <height>802</height>
    </size>
   </property>
@@ -40,14 +40,14 @@
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>68</x>
-     <y>75</y>
+     <x>300</x>
+     <y>90</y>
      <width>151</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string/>
+    <string>имя</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -56,14 +56,14 @@
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
-     <x>323</x>
-     <y>75</y>
+     <x>530</x>
+     <y>90</y>
      <width>151</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string/>
+    <string>о</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -72,14 +72,14 @@
   <widget class="QLabel" name="label_3">
    <property name="geometry">
     <rect>
-     <x>538</x>
-     <y>74</y>
+     <x>70</x>
+     <y>90</y>
      <width>141</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string/>
+    <string>фамилия</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -88,14 +88,14 @@
   <widget class="QLabel" name="label_4">
    <property name="geometry">
     <rect>
-     <x>528</x>
-     <y>250</y>
+     <x>62</x>
+     <y>309</y>
      <width>161</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string/>
+    <string>фамилия</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -104,14 +104,14 @@
   <widget class="QLabel" name="label_5">
    <property name="geometry">
     <rect>
-     <x>73</x>
-     <y>250</y>
+     <x>310</x>
+     <y>309</y>
      <width>141</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string/>
+    <string>имя</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -120,14 +120,14 @@
   <widget class="QLabel" name="label_6">
    <property name="geometry">
     <rect>
-     <x>318</x>
-     <y>250</y>
+     <x>525</x>
+     <y>310</y>
      <width>161</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string/>
+    <string>о</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -137,7 +137,7 @@
    <property name="geometry">
     <rect>
      <x>58</x>
-     <y>591</y>
+     <y>448</y>
      <width>681</width>
      <height>31</height>
     </rect>
@@ -153,9 +153,9 @@
    <property name="geometry">
     <rect>
      <x>98</x>
-     <y>613</y>
+     <y>480</y>
      <width>601</width>
-     <height>16</height>
+     <height>51</height>
     </rect>
    </property>
    <property name="text">
@@ -168,8 +168,8 @@
   <widget class="QLabel" name="label_10">
    <property name="geometry">
     <rect>
-     <x>98</x>
-     <y>333</y>
+     <x>880</x>
+     <y>60</y>
      <width>224</width>
      <height>224</height>
     </rect>
@@ -181,8 +181,8 @@
   <widget class="QLabel" name="label_11">
    <property name="geometry">
     <rect>
-     <x>428</x>
-     <y>333</y>
+     <x>880</x>
+     <y>360</y>
      <width>224</width>
      <height>224</height>
     </rect>
@@ -195,7 +195,7 @@
    <property name="geometry">
     <rect>
      <x>118</x>
-     <y>730</y>
+     <y>710</y>
      <width>141</width>
      <height>51</height>
     </rect>
@@ -208,7 +208,7 @@
    <property name="geometry">
     <rect>
      <x>58</x>
-     <y>27</y>
+     <y>50</y>
      <width>661</width>
      <height>16</height>
     </rect>
@@ -221,7 +221,7 @@
    <property name="geometry">
     <rect>
      <x>58</x>
-     <y>202</y>
+     <y>260</y>
      <width>661</width>
      <height>21</height>
     </rect>
@@ -233,8 +233,8 @@
   <widget class="QLabel" name="label_14">
    <property name="geometry">
     <rect>
-     <x>88</x>
-     <y>303</y>
+     <x>870</x>
+     <y>30</y>
      <width>251</width>
      <height>20</height>
     </rect>
@@ -249,8 +249,8 @@
   <widget class="QLabel" name="label_15">
    <property name="geometry">
     <rect>
-     <x>418</x>
-     <y>303</y>
+     <x>870</x>
+     <y>330</y>
      <width>251</width>
      <height>20</height>
     </rect>
@@ -266,7 +266,7 @@
    <property name="geometry">
     <rect>
      <x>498</x>
-     <y>730</y>
+     <y>710</y>
      <width>141</width>
      <height>51</height>
     </rect>
@@ -278,14 +278,14 @@
   <widget class="QLabel" name="label_17">
    <property name="geometry">
     <rect>
-     <x>48</x>
-     <y>634</y>
-     <width>211</width>
+     <x>38</x>
+     <y>560</y>
+     <width>261</width>
      <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string>Дата создания карты</string>
+    <string>Дата последнего анализа</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -295,7 +295,7 @@
    <property name="geometry">
     <rect>
      <x>528</x>
-     <y>634</y>
+     <y>560</y>
      <width>231</width>
      <height>31</height>
     </rect>
@@ -311,7 +311,7 @@
    <property name="geometry">
     <rect>
      <x>48</x>
-     <y>684</y>
+     <y>610</y>
      <width>211</width>
      <height>31</height>
     </rect>
@@ -327,7 +327,7 @@
    <property name="geometry">
     <rect>
      <x>528</x>
-     <y>684</y>
+     <y>610</y>
      <width>211</width>
      <height>31</height>
     </rect>
@@ -343,9 +343,9 @@
    <property name="geometry">
     <rect>
      <x>60</x>
-     <y>130</y>
+     <y>170</y>
      <width>661</width>
-     <height>16</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="text">

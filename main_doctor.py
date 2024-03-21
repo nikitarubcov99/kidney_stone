@@ -70,8 +70,8 @@ def add_image_to_existing_pdf(pdf_path, image_path, image_path1, page_number):
     :return:
     """
     pdf_document = fitz.open(pdf_path)
-    pdf_document[page_number].insert_image(fitz.Rect(30, 255, 230, 455), stream=open(image_path, "rb").read())
-    pdf_document[page_number].insert_image(fitz.Rect(330, 255, 530, 455), stream=open(image_path1, "rb").read())
+    pdf_document[page_number].insert_image(fitz.Rect(30, 285, 230, 485), stream=open(image_path, "rb").read())
+    pdf_document[page_number].insert_image(fitz.Rect(330, 285, 530, 485), stream=open(image_path1, "rb").read())
     pdf_document.saveIncr()
     pdf_document.close()
 
@@ -193,12 +193,12 @@ class PatientDetailsWindow(QDialog):
         current_date_str = current_datetime.strftime("%Y-%m-%d")
         intro = '            Отчет об анализе на наличие лейкемии по пятну крови'.encode('utf-8')
         fio_intro = 'Данные пациента: '.encode('utf-8')
-        patient_fio = f'Фамилия: {patient_family} Имя: {patient_name} Отчество: {patient_second_name} полных лет: {patient_age}'.encode(
+        patient_fio = f'Фамилия: {patient_family}   Имя: {patient_name}   Отчество: {patient_second_name}      полных лет: {patient_age}'.encode(
             'utf-8')
         patient = f'СНИЛС: {snils_number}     диагноз по МКБ-10: {mkb_diagnose}     кол-во анализов {patient_count}'.encode(
             'utf-8')
         doctor_intro = 'Информация о лечащем враче: '.encode('utf-8')
-        doctor_fio = f'Фамилия: {doctor_family} Имя: {doctor_name} Отчество: {doctor_second_name}'.encode(
+        doctor_fio = f'Фамилия: {doctor_family}   Имя: {doctor_name}   Отчество: {doctor_second_name}'.encode(
             'utf-8')
         doctor_cat = f'Категория лечащего врача: {doctor_class}'.encode('utf-8')
         image_intro_norm = 'Изначальное изображение                          Изображение с аномалиями'.encode('utf-8')
@@ -220,6 +220,7 @@ class PatientDetailsWindow(QDialog):
         pdf.set_font("Times", size=14)
         pdf.multi_cell(400, 10, str(doctor_fio.decode('utf-8')))
         pdf.multi_cell(400, 10, str(doctor_cat.decode('utf-8')))
+        pdf.ln(10)
         pdf.set_font("Times", size=16)
         pdf.multi_cell(400, 10, str(image_intro_norm.decode('utf-8')))
         pdf.set_font("Times", size=18)
@@ -235,8 +236,8 @@ class PatientDetailsWindow(QDialog):
             f.write(start_image_blob)
         with open('anomaly_image.png', 'wb') as f:
             f.write(anomaly_image_blob)
-        image_path = "C:/Users/nero1/PycharmProjects/pythonProject3/start_image.png"
-        image_path1 = "C:/Users/nero1/PycharmProjects/pythonProject3/anomaly_image.png"
+        image_path = "C:/Users/dmitr/PycharmProjects/kidney_stone/start_image.png"
+        image_path1 = "C:/Users/dmitr/PycharmProjects/kidney_stone/anomaly_image.png"
         existing_pdf_path = pdf_path
         target_page_number = 0
         add_image_to_existing_pdf(existing_pdf_path, image_path, image_path1, target_page_number)
@@ -274,7 +275,7 @@ class PatientDetailsWindow(QDialog):
             with open("image_from_db.jpg", "wb") as file:
                 file.write(self.card.start_image)
                 file.close()
-            file_name = "C:/Users/nero1/PycharmProjects/pythonProject3/image_from_db.jpg"
+            file_name = "C:/Users/dmitr/PycharmProjects/kidney_stone/image_from_db.jpg"
             self.pixmap = QPixmap(file_name)
             self.pixmap = self.pixmap.scaled(241, 221)
             self.label_10.setPixmap(self.pixmap)
@@ -283,7 +284,7 @@ class PatientDetailsWindow(QDialog):
             with open("image_from_db1.jpg", "wb") as file:
                 file.write(self.card.anomaly_image)
                 file.close()
-            file_name = "C:/Users/nero1/PycharmProjects/pythonProject3/image_from_db1.jpg"
+            file_name = "C:/Users/dmitr/PycharmProjects/kidney_stone/image_from_db1.jpg"
             self.pixmap = QPixmap(file_name)
             self.pixmap = self.pixmap.scaled(241, 221)
             self.label_11.setPixmap(self.pixmap)
@@ -344,6 +345,8 @@ class ui_doctor(QMainWindow):
         user = UserModel.get(UserModel.user_login == self.login)
         doctor_id = user.doctor_id
         patient_cards = PatientsCardsModel.select().where(PatientsCardsModel.patient_card_doctor_id == doctor_id)
+        doctor = DoctorModel.get_by_id(doctor_id)
+        self.label.setText(f"{doctor.doctor_family} {doctor.doctor_name[0]}. {doctor.doctor_second_name[0]}.")
         self.tableWidget.setRowCount(patient_cards.count())
         for row, card in enumerate(patient_cards):
             patient = card.patient_card_patient_id
@@ -525,7 +528,7 @@ class AddVisitForm(QMainWindow):
         self.label_7.clear()
         self.label_5.clear()
         file_name = QFileDialog.getOpenFileName(self, 'Open file',
-                                                '"C:/Users/nero1"')[0]
+                                                '"C:/Users/dmitr"')[0]
         self.label_8.setText(file_name)
         self.print_image()
 
